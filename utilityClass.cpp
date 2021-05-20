@@ -1,5 +1,4 @@
 #include "utilityClass.h"
-using namespace std;
 
 utilityClass::utilityClass(int space)
 { 
@@ -17,24 +16,32 @@ std::string utilityClass::removeStringBetweenDoubleQuotes(const std::string logL
 {
 	int count = 0;
 	std::string stringWithoutQuotes = "";
-    for (int itr=0;itr<logLine.length();itr++)
+
+
+	for (int itr=0;itr<logLine.length();itr++)
     {
     	if (logLine[itr]=='\"')
     	{
-    		count++;
-    		continue;
+    		count+=1;
+
+    		if (count==2)
+    			continue;
+
     	}
-    	else if (count==0 && logLine[itr]==' ')
-    	{
-    		continue;
-    	}
-    	else if(count ==0 || count==2)
+    	if (itr<logLine.length() && count >=2 )
     	{
     		stringWithoutQuotes = stringWithoutQuotes + logLine[itr];
     	}
 
     }
+    	
     return stringWithoutQuotes;
+}
+
+std::string utilityClass::removeExtraSpaces(string logLine) 
+{
+    logLine.erase(remove(logLine.begin(), logLine.end(), ' '), logLine.end());
+    return logLine;
 }
 
 std::string utilityClass::removeSpaces(string logLine) 
@@ -43,6 +50,7 @@ std::string utilityClass::removeSpaces(string logLine)
     return logLine;
 }
 
+// slice all the variables around comma, and store them in a vector to use them in the modified log line
 std::vector<string> utilityClass::sliceStringAroundComma(std::string line)
 {
 	std::vector<string> resultVector;
@@ -59,6 +67,7 @@ std::vector<string> utilityClass::sliceStringAroundComma(std::string line)
     return resultVector;
 }
 
+//extract all the variables from the log line
 std::vector<std::string> utilityClass::findPrintableVariable(std::string log_line, std::string logType)
 {
 
@@ -66,19 +75,18 @@ std::vector<std::string> utilityClass::findPrintableVariable(std::string log_lin
 	std::string output = "";
 
 	temp = removeSpaces(temp);
+
+	cout<<temp<<endl;
+
 	temp = removeStringBetweenDoubleQuotes(temp);
 
-
-	if (logType.substr(0,6)== "SERVER")
-	{
-		temp = temp.substr(logType.length() + 2, temp.length() - logType.length()-4);
-	}
-	else if (logType.substr(0,4) == "ALGO")
-	{
-		temp = temp.substr(logType.length() + 2, temp.length() - logType.length()-4);
-	}
-
+	temp = temp.substr(1, temp.length()-3);
+	
 	vector<string> printableVariable = sliceStringAroundComma(temp); //find out all the values that has been used in the log
+
+	std::vector<string> variable  =  printableVariable;
+	for (int i = 0; i < variable.size(); i++)
+        				cout << variable[i] <<endl;
 
 	return printableVariable;
 } 
@@ -99,6 +107,7 @@ std::vector<std::string> utilityClass::findFormatSpecifier(std::string log_line)
 
 }
 
+//count space before log   
 int utilityClass::countSpaceBeforeLog(const std::string &line)
 {
 	space_count = 0;
@@ -119,17 +128,12 @@ std::string utilityClass::convertOldLogToNewLog(std::string log_line, std::vecto
 {
 	std::string newLog = ""; 
 
-	//log_line = removeSpaces(log_line);
-
 	for (int i =0;i<space_count;i++)
 	{
 		newLog = newLog + " ";
 	}
-
-	
-
-	//cout<<log_line<<endl;
-
+ 
+    // take the decision based on log type
 	if (logType=="ALGO_ELOG")
 		newLog = newLog + "TTLOG(ERROR,13)<<\"";
 	else if (logType=="ALGO_WLOG")
@@ -147,9 +151,9 @@ std::string utilityClass::convertOldLogToNewLog(std::string log_line, std::vecto
 	else if (logType=="SERVER_WLOG")
 		newLog = newLog + "TTLOG(WARNING,13)<<\"";
 	
-	int position = 0;
-	int count = 0;
-	bool flag = 0;
+	int position = 0; //position of varibale in vector (variables that will be printed in the log line)
+	int count = 0;    
+	bool flag = 0;  
 
 	for(int i = (logType.length()+space_count)+1; i < log_line.length(); i++)
 	{
@@ -163,7 +167,6 @@ std::string utilityClass::convertOldLogToNewLog(std::string log_line, std::vecto
 		}
 		if (log_line[i]=='%')
 		{
-			flag = 1; 
 			newLog = newLog + "\"<<" + variable[position] +"<<\"";
 			position++;
 			i = i+1;
@@ -183,11 +186,12 @@ std::string utilityClass::convertOldLogToNewLog(std::string log_line, std::vecto
 		}
 	}
 
-	newLog = newLog.substr(0,newLog.length()-3) + ";";
+	newLog = newLog.substr(0,newLog.length()-3) + "<<endl;";
 	return newLog;
 
 }
-	
+
+//check if the given line is log line or not and what is the type of the log	
 std::string utilityClass::checkLog(std::string line)
 {   
 	std::string log_type;
