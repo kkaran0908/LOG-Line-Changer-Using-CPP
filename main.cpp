@@ -37,6 +37,10 @@ int main()
 			
         		variableInLog = uti.findPrintableVariable(line,logType);
 
+        		variableInLog = uti.removeStdStringFromPrintableVariable(variableInLog);
+
+        		variableInLog = uti.removeTo_StringFromPrintableVariable(variableInLog);
+
         		line = uti.convertOldLogToNewLog(line, specifier ,variableInLog, spaceCount, logType);//  convert the old log line into the new log format
 
         		//line = uti.removeExtraSpaces(line); 

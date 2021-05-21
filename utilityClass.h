@@ -26,4 +26,6 @@ public:
 	std::string removeSpaces(std::string);
 	std::string removeExtraSpaces(std::string);
 	std::vector<string> sliceStringAroundComma(std::string);
+	std::vector<string> removeStdStringFromPrintableVariable(std::vector<string>);
+	std::vector<string> removeTo_StringFromPrintableVariable(std::vector<string>);
 };

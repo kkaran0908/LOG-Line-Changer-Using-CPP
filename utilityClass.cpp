@@ -76,8 +76,6 @@ std::vector<std::string> utilityClass::findPrintableVariable(std::string log_lin
 
 	temp = removeSpaces(temp);
 
-	cout<<temp<<endl;
-
 	temp = removeStringBetweenDoubleQuotes(temp);
 
 	temp = temp.substr(1, temp.length()-3);
@@ -85,8 +83,7 @@ std::vector<std::string> utilityClass::findPrintableVariable(std::string log_lin
 	vector<string> printableVariable = sliceStringAroundComma(temp); //find out all the values that has been used in the log
 
 	std::vector<string> variable  =  printableVariable;
-	for (int i = 0; i < variable.size(); i++)
-        				cout << variable[i] <<endl;
+	
 
 	return printableVariable;
 } 
@@ -153,7 +150,10 @@ std::string utilityClass::convertOldLogToNewLog(std::string log_line, std::vecto
 	
 	int position = 0; //position of varibale in vector (variables that will be printed in the log line)
 	int count = 0;    
-	bool flag = 0;  
+	bool flag = 0; 
+
+	int breakpoint = 0; 
+
 
 	for(int i = (logType.length()+space_count)+1; i < log_line.length(); i++)
 	{
@@ -161,18 +161,24 @@ std::string utilityClass::convertOldLogToNewLog(std::string log_line, std::vecto
 		{
 			count++;
 		}
+
 		if (count==2)
 		{
 			break;
 		}
+		
 		if (log_line[i]=='%')
 		{
 			newLog = newLog + "\"<<" + variable[position] +"<<\"";
 			position++;
 			i = i+1;
+			breakpoint = 1;
 		}
+
 		else
 		{
+			breakpoint = 2;
+
 			if(flag==1)
 			{
 				flag = 0;
@@ -186,9 +192,58 @@ std::string utilityClass::convertOldLogToNewLog(std::string log_line, std::vecto
 		}
 	}
 
+    if (breakpoint==2)
+    {    
+    	newLog = newLog + "\"<<\"";
+    }
 	newLog = newLog.substr(0,newLog.length()-3) + "<<endl;";
+	
 	return newLog;
 
+}
+
+
+std::vector<string> utilityClass::removeTo_StringFromPrintableVariable(std::vector<string> variableInLog)
+{
+
+	std::vector<string> storeModifiedVariable;
+
+    for (int i=0; i<variableInLog.size(); i++)
+        {
+      		if (variableInLog[i].find("to_string()") != std::string::npos)
+      	        { 
+      	    		std::string tmp1 = variableInLog[i].substr(0, variableInLog[i].size()-12);
+      				storeModifiedVariable.push_back(tmp1);
+      			}
+      		else
+      		{
+      			storeModifiedVariable.push_back(variableInLog[i]);
+      		}
+        }
+      return storeModifiedVariable;
+}
+
+
+std::vector<string> utilityClass::removeStdStringFromPrintableVariable(std::vector<string> variableInLog)
+{
+	  std::vector<string> storeModifiedVariable;
+
+      for (int i=0; i<variableInLog.size(); i++)
+      {
+      	if (variableInLog[i].length()>=12 && variableInLog[i].substr(0,11)=="std::string")
+
+      	{ 
+
+      	    std::string tmp1 = variableInLog[i].substr(0, variableInLog[i].size()-1);
+      	    std::string tmp2 = tmp1.substr(12, tmp1.size());
+      		storeModifiedVariable.push_back(tmp2);
+      	}
+      	else
+      	{
+      		storeModifiedVariable.push_back(variableInLog[i]);
+      	}
+      }
+      return storeModifiedVariable;
 }
 
 //check if the given line is log line or not and what is the type of the log	
