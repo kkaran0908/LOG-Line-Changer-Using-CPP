@@ -38,10 +38,27 @@ std::string utilityClass::removeStringBetweenDoubleQuotes(const std::string logL
     return stringWithoutQuotes;
 }
 
-std::string utilityClass::removeExtraSpaces(string logLine) 
+std::string utilityClass::removeExtraSpaces(std::string logLine,int space_count) 
 {
-    logLine.erase(remove(logLine.begin(), logLine.end(), ' '), logLine.end());
-    return logLine;
+	std::string logAfterRemovingExtraSpace = "";
+
+	char s1 = ' ';
+	int itr = 0;
+	
+	for (itr = 0 ;itr<logLine.length()-1; itr++)
+	{
+		if(s1==logLine[itr] && s1==logLine[itr+1])
+			continue;
+		else
+			logAfterRemovingExtraSpace = logAfterRemovingExtraSpace + logLine[itr];
+	}
+	logAfterRemovingExtraSpace = logAfterRemovingExtraSpace + logLine[itr];
+
+	for(itr = 0; itr<space_count-1; itr++)
+		logAfterRemovingExtraSpace = " "+ logAfterRemovingExtraSpace;
+
+    
+    return logAfterRemovingExtraSpace;
 }
 
 std::string utilityClass::removeSpaces(string logLine) 
@@ -98,7 +115,24 @@ std::vector<std::string> utilityClass::findFormatSpecifier(std::string log_line)
 		if(log_line.substr(itr,2)=="%s")
 		{
 			specifiers.push_back("%s");
+			continue;
 		}
+		if(log_line.substr(itr,2)=="%d")
+		{
+			specifiers.push_back("%d");
+			continue;
+		}
+		if (log_line.substr(itr,4)=="%016")
+		{
+			specifiers.push_back("hex");
+			continue;
+		}
+		if (log_line.substr(itr,1)=="%")
+		{
+			specifiers.push_back("u");
+			continue;
+		}
+
 	}
 	return specifiers;
 
@@ -169,7 +203,19 @@ std::string utilityClass::convertOldLogToNewLog(std::string log_line, std::vecto
 		
 		if (log_line[i]=='%')
 		{
-			newLog = newLog + "\"<<" + variable[position] +"<<\"";
+			if (specifier[position]=="hex") //to handle the hex code
+
+			{
+				//std::showbase << std::hex<<session_id
+
+				newLog = newLog + "\"<<" + "std::showbase << std::hex<<" + variable[position] +"<<\"";
+				//newLog = newLog + "\"<<" + variable[position] +"<<\"";
+
+			}
+			else
+			{
+				newLog = newLog + "\"<<" + variable[position] +"<<\"";
+			}
 			position++;
 			i = i+1;
 			breakpoint = 1;
@@ -200,6 +246,105 @@ std::string utilityClass::convertOldLogToNewLog(std::string log_line, std::vecto
 	
 	return newLog;
 
+}
+
+int utilityClass::checkQuestionMarkInLog(std::string logLine)
+{
+	int found = logLine.find('?');
+	return found;
+}
+
+
+std::string utilityClass::removeMultipleDoubleQuotesFromLogsWithQuestionMark(std::string line, int questionMarkPosition)
+{
+	//it will help us in handling the logs that are containing the multiple double quotes E.g.:
+	/* 
+	ALGO_ILOG("[algo:%s] Updated OMA Parent ID on request: "
+                      "request=%s "
+                      "new_oma_parent_id=%s",
+                      inst_id().to_string(),
+                      ALGOJOB_REQUEST_ID_STR[request->id],
+                      std::string(oma_parent_uuid_string)
+                     );*/
+     
+    std::string logWithoutMultipleDoubleQuotes = "";
+	int startIndex = -1;
+	int endIndex = -1;
+	int positionOfLastQuotes = -1;
+	int itr = 0;
+	int flag = 0;
+	while(itr<=questionMarkPosition)
+	{
+		if(line[itr]=='\"')
+		{
+			positionOfLastQuotes = itr;
+		}
+		itr++;
+	}
+
+
+	for (int itr = 0; itr < positionOfLastQuotes; itr++)
+	{
+		if (line[itr]=='\"' && flag ==0) //flag is to add the first quote
+		{
+			flag = 1;
+			logWithoutMultipleDoubleQuotes = logWithoutMultipleDoubleQuotes + line[itr];
+			continue;
+		}
+		else if (line[itr]=='\"')
+			continue;
+		logWithoutMultipleDoubleQuotes = logWithoutMultipleDoubleQuotes + line[itr];
+	}
+
+	//logWithoutMultipleDoubleQuotes = logWithoutMultipleDoubleQuotes + "\"";
+
+	for (int itr = positionOfLastQuotes;itr<line.length();itr++)
+	{
+		logWithoutMultipleDoubleQuotes = logWithoutMultipleDoubleQuotes + line[itr];
+	}
+	return logWithoutMultipleDoubleQuotes;//logWithoutMultipleDoubleQuotes;
+}
+
+
+std::string utilityClass::removeMultipleDoubleQuotesFromLogs(std::string line)
+{
+	//it will help us in handling the logs that are containing the multiple double quotes E.g.:
+	/* 
+	ALGO_ILOG("[algo:%s] Updated OMA Parent ID on request: "
+                      "request=%s "
+                      "new_oma_parent_id=%s",
+                      inst_id().to_string(),
+                      ALGOJOB_REQUEST_ID_STR[request->id],
+                      std::string(oma_parent_uuid_string)
+                     );*/
+     
+    std::string logWithoutMultipleDoubleQuotes = "";
+	int startIndex = -1;
+	int endIndex = -1;
+
+
+	const char *pfirst;
+	pfirst = strchr(line.c_str(), '\"');
+	startIndex = pfirst - line.c_str();
+
+	const char *plast;
+	plast = strrchr(line.c_str(), '\"');
+	endIndex = plast - line.c_str();
+
+
+	for (int itr = 0; itr < line.length(); itr++)
+	{
+		if ((line[itr]=='\"' && (itr==startIndex))|| (line[itr]=='\"' && (itr==endIndex)))
+		{
+			logWithoutMultipleDoubleQuotes = logWithoutMultipleDoubleQuotes + line[itr];
+			continue;
+		}
+		else if (line[itr]=='\"')
+			continue;
+		logWithoutMultipleDoubleQuotes = logWithoutMultipleDoubleQuotes + line[itr];
+	}
+
+	return logWithoutMultipleDoubleQuotes;//logWithoutMultipleDoubleQuotes;
 }
 
 

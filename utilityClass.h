@@ -24,8 +24,11 @@ public:
 	std::string remove_extra_whitespaces(const string &input, string &output);
 	std::string removeStringBetweenDoubleQuotes(std::string);
 	std::string removeSpaces(std::string);
-	std::string removeExtraSpaces(std::string);
+	std::string removeExtraSpaces(std::string,int);
 	std::vector<string> sliceStringAroundComma(std::string);
 	std::vector<string> removeStdStringFromPrintableVariable(std::vector<string>);
 	std::vector<string> removeTo_StringFromPrintableVariable(std::vector<string>);
+	std::string removeMultipleDoubleQuotesFromLogs(std::string);
+	int checkQuestionMarkInLog(std::string);
+	std::string removeMultipleDoubleQuotesFromLogsWithQuestionMark(std::string, int);
 };
