@@ -8,6 +8,7 @@
 #include<sstream>
 #include <regex>
 #include<typeinfo>
+#include <cstdio>
 using namespace std;
 
 class utilityClass
