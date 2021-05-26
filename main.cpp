@@ -5,13 +5,12 @@ int main()
 
 int count = 1;
 
-std::string path = "/Users/karankumar/Desktop/cppFiles/algo/";
+std::string path = "/Users/karankumar/Desktop/cppFiles/algo";
 
 for (auto& dirEntry: std::filesystem::recursive_directory_iterator(path)) 
 {
     if (!dirEntry.is_regular_file()) 
     {
-            //std::cout << "Directory: " << dirEntry.path() << std::endl;
             continue;
     }
         std::filesystem::path file = dirEntry.path();
@@ -43,23 +42,32 @@ for (auto& dirEntry: std::filesystem::recursive_directory_iterator(path))
 
 		std::string subPath = std::string(file).substr(0,endIndex+1);
 
-		cout<<"Full Path:-> "<<file<<endl;
-		//cout<<"Sub Path:-> "<<subPath<<endl; 
-
-
 		std:string fileName = subPath + "temperoryFile.cpp" ;//temperorily save the content of the file
 
 		ofstream MyFile(fileName); //file to save the modified content
 
+		cout<<"File Number:" << count << "Processed File Path: "<<file<<endl;
+
 		while(getline(data,line))    //read the file line by line
 		{
+            if (filename=="algoinstmgr.cpp")
+            {
+                cout<<line<<endl;
+                cout<<endl;
+            }
+
+            int spaceCount  = 0;
 
 			string logType = uti.checkLog(line);  //check if some particular line is log line or not and find the type of log
 
-			int spaceCount = uti.countSpaceBeforeLog(line);   //count the space before the log line so that after modification we can make consistency
+            if (filename=="algoinstmgr.cpp")
+            {
+                cout<<"After Check Log"<<endl;
+            }
 
 			if (!logType.empty())   //if some particular line is log line and log is distributed in more than one line, combined it and stroed it in a variable called combinedLogLine
 			{
+                int spaceCount = uti.countSpaceBeforeLog(line);   //count the space before the log line so that after modification we can make consistency
 				std::string combinedLogLine= "";
 
             	while(line.back()!=';')
@@ -78,42 +86,84 @@ for (auto& dirEntry: std::filesystem::recursive_directory_iterator(path))
 
             	combinedLogLine = combinedLogLine + line;
             	line = combinedLogLine;   //line contains the log distributed in multiple line
-            	
 			}
+
+            if (filename=="algoinstmgr.cpp")
+            {
+                cout<<"After Combining the Log"<<endl;
+            }
 
 
 			if (!logType.empty() && flag!=1) //convert the log to new form (ALGO_ILOG - TTLOG())
 			{  
 				int firstQuestionMarkPosition = uti.checkQuestionMarkInLog(line);
+                
+                
+                bool isDobuleQuotes = uti.checkDoubleQuotesInLog(line); //handle the case when, no dobule quotes are there in the log
+                 
+                if (!isDobuleQuotes) //log is not having any double quote
+                {
 
-				if (firstQuestionMarkPosition < 0)
-				{
-				  line = uti.removeMultipleDoubleQuotesFromLogs(line);
+                    variableInLog = uti.findPrintableVariableinWithoutQuotesLog(line,logType);
+
+                    variableInLog = uti.removeStdStringFromPrintableVariable(variableInLog);
+
+                    variableInLog = uti.removeTo_StringFromPrintableVariable(variableInLog);
+
+                    line = uti.convertOldLogToNewLogWithoutDoubleQuotes(line, variableInLog, spaceCount, logType);//  convert the old log line into the new log format
+
                 }
+                
+                else
+                {
+                    if (filename=="algoinstmgr.cpp")
+                    {
+                        cout<<"Inside else "<<endl;
+                    }
+                        if (firstQuestionMarkPosition < 0)
+                        {
+                          line = uti.removeMultipleDoubleQuotesFromLogs(line);
+                        }
 
-                if (firstQuestionMarkPosition > 0)
-				{
-				  line = uti.removeMultipleDoubleQuotesFromLogsWithQuestionMark(line, firstQuestionMarkPosition);
+                        if (firstQuestionMarkPosition > 0)
+                        {
+                          line = uti.removeMultipleDoubleQuotesFromLogsWithQuestionMark(line, firstQuestionMarkPosition);
+                        }
+
+                        specifier = uti.findFormatSpecifier(line);
+
+                        if (filename=="algoinstmgr.cpp")
+                    {
+                        cout<<"After finding specifier "<<endl;
+                    }
+
+                    
+                        variableInLog = uti.findPrintableVariable(line,logType);
+
+                        variableInLog = uti.removeStdStringFromPrintableVariable(variableInLog);
+
+                        variableInLog = uti.removeTo_StringFromPrintableVariable(variableInLog);
+
+                        if (filename=="algoinstmgr.cpp")
+                    {
+                        cout<<"After finding variable in log "<<endl;
+
+                        for(int itr=0; itr < variableInLog.size();itr++)
+                        {
+                            cout<<"Variable in log: "<<variableInLog[itr]<<endl;
+                        }
+                    }
+
+                        line = uti.convertOldLogToNewLog(line, specifier ,variableInLog, spaceCount, logType);//  convert the old log line into the new log format
+
+                        if (filename=="algoinstmgr.cpp")
+                    {
+                        cout<<"After converting to the new log "<<endl;
+                    }
                 }
-
-				specifier = uti.findFormatSpecifier(line);
-
-				for (int i=0;i<specifier.size();i++)
-				{
-					cout<<specifier[i]<<endl;
-				} 
-			
-        		variableInLog = uti.findPrintableVariable(line,logType);
-
-        		variableInLog = uti.removeStdStringFromPrintableVariable(variableInLog);
-
-        		variableInLog = uti.removeTo_StringFromPrintableVariable(variableInLog);
-
-        		line = uti.convertOldLogToNewLog(line, specifier ,variableInLog, spaceCount, logType);//  convert the old log line into the new log format
 
         		line = uti.removeExtraSpaces(line,spaceCount); 
-
-        		cout.flush();    
+                cout.flush();
 			}  	
 			flag = 0;		
 			MyFile<<line + "\n"; //write to the file
@@ -121,14 +171,11 @@ for (auto& dirEntry: std::filesystem::recursive_directory_iterator(path))
 		}
 		
 		MyFile.close();
-		//delete the old file
-		 std::filesystem::remove(std::string(file) );
 
-		//rename the modified file to its original name
-
+        //rename the processed file to its original name
 		std::filesystem::rename(fileName, std::string(file));
+		//std::filesystem::remove(std::string(fileName) );
 
-		cout<<"File Number:" << count << "Processed File Path: "<<fileName<<endl;
 		count+=1;
 
 	}

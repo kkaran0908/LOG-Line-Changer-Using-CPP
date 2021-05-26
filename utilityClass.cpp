@@ -84,6 +84,23 @@ std::vector<string> utilityClass::sliceStringAroundComma(std::string line)
     return resultVector;
 }
 
+std::vector<std::string> utilityClass::findPrintableVariableinWithoutQuotesLog(std::string log_line,std::string logType)
+{
+    std::string temp = log_line; //store the log line in temperary variable
+    std::string output = "";
+
+    temp = removeSpaces(temp);
+
+    temp = temp.substr(logType.length()+1, log_line.length()-logType.length()-3);
+    
+    vector<string> printableVariable = sliceStringAroundComma(temp); //find out all the values that has been used in the log
+
+    std::vector<string> variable  =  printableVariable;
+    
+
+    return printableVariable;
+}
+
 //extract all the variables from the log line
 std::vector<std::string> utilityClass::findPrintableVariable(std::string log_line, std::string logType)
 {
@@ -154,10 +171,58 @@ int utilityClass::countSpaceBeforeLog(const std::string &line)
    return space_count;
 }
 
+bool utilityClass::checkDoubleQuotesInLog(std::string line)
+{
+    for(int itr =0;itr<line.length();itr++)
+    {
+        if(line[itr]=='\"')
+            return true;
+    }
+    return false;
+
+}
+
+std::string utilityClass::convertOldLogToNewLogWithoutDoubleQuotes(std::string line,std::vector<std::string> variableInLog, int spaceCount, std::string logType)
+{
+    std::string newLog = "";
+
+    for (int i =0;i<space_count;i++)
+    {
+        newLog = newLog + " ";
+    }
+ 
+    // take the decision based on log type
+    if (logType=="ALGO_ELOG")
+        newLog = newLog + "TTLOG(ERROR,13)<<";
+    else if (logType=="ALGO_WLOG")
+        newLog = newLog + "TTLOG(WARNING,13)<<";
+    else if (logType=="ALGO_ILOG")
+        newLog = newLog + "TTLOG(INFO,13)<<";
+    else if (logType=="ALGO_DLOG")
+        newLog = newLog + "TTLOG(DEBUG,13)<<";
+    else if (logType=="SERVER_DLOG")
+        newLog = newLog + "TTLOG(DEBUG,13)<<";
+    else if (logType=="SERVER_ELOG")
+        newLog = newLog + "TTLOG(ERROR,13)<<";
+    else if (logType=="SERVER_ILOG")
+        newLog = newLog + "TTLOG(INFO,13)<<";
+    else if (logType=="SERVER_WLOG")
+        newLog = newLog + "TTLOG(WARNING,13)<<";
+
+    for(int itr =0;itr<variableInLog.size();itr++)
+    {
+        newLog = newLog + variableInLog[itr] + "<<" + "\", " + "\"" + "<<";
+    }
+    newLog = newLog.substr(0,newLog.length()-6) + "endl;";
+
+    return newLog;
+}
 
 std::string utilityClass::convertOldLogToNewLog(std::string log_line, std::vector<string> specifier, std::vector<string> variable, int space_count, std::string logType)
 {
 	std::string newLog = ""; 
+
+	cout<<"Length of the log:"<<log_line.length()<<endl;
 
 	for (int i =0;i<space_count;i++)
 	{
@@ -187,6 +252,8 @@ std::string utilityClass::convertOldLogToNewLog(std::string log_line, std::vecto
 	bool flag = 0; 
 
 	int breakpoint = 0; 
+
+	
 
 
 	for(int i = (logType.length()+space_count)+1; i < log_line.length(); i++)
@@ -236,7 +303,10 @@ std::string utilityClass::convertOldLogToNewLog(std::string log_line, std::vecto
 			}
 			newLog = newLog + log_line[i];
 		}
+		cout<<"I am here"<<endl;
 	}
+
+	cout<<"After processing"<<endl;
 
     if (breakpoint==2)
     {    
@@ -391,61 +461,69 @@ std::vector<string> utilityClass::removeStdStringFromPrintableVariable(std::vect
       return storeModifiedVariable;
 }
 
-//check if the given line is log line or not and what is the type of the log	
-std::string utilityClass::checkLog(std::string line)
-{   
-	std::string log_type;
-	for(int i =0; i <line.length(); i++)
-	{
-		if (isspace(line[i]))
-		{
-			continue;
-		}
-		else if (line.substr(i,9)=="ALGO_ILOG")
-		{
-			log_type = "ALGO_ILOG";
-			break;
-		}
-		else if (line.substr(i, 9)=="ALGO_ELOG")
-		{
-			log_type = "ALGO_ELOG";
-			break;
-		}
-		else if (line.substr(i,9)=="ALGO_DLOG")
-		{
-			log_type = "ALGO_DLOG";
-			break;
-		}
-		else if (line.substr(i,9)=="ALGO_WLOG")
-		{
-			log_type = "ALGO_WLOG";
-			break;
-		}
-		else if (line.substr(i,11)=="SERVER_ILOG")
-		{
-			log_type = "SERVER_ILOG";
-			break;
-		}
-		else if (line.substr(i,11)=="SERVER_WLOG")
-		{
-			log_type = "SERVER_WLOG";
-			break;
-		}
-		else if (line.substr(i,11)=="SERVER_DLOG")
-		{
-			log_type = "SERVER_DLOG";
-			break;
-		}
-		else if (line.substr(i,11)=="SERVER_ELOG")
-		{
-			log_type = "SERVER_ELOG";
-			break;
-		}
-		else
-		{
-			break;
-		}
 
-	}
-	return log_type;
+//check if the given line is log line or not and what is the type of the log
+std::string utilityClass::checkLog(std::string line)
+{
+    std::string log_type;
+
+    for(int i =0; i <line.length(); i++)
+    {
+        if (isspace(line[i]))
+        {
+            continue;
+        }
+        else if ((i+11)<line.length() && line.substr(i,11)=="ALGO_DLOG_L")
+        {
+            log_type = "\0";
+            break;
+        }
+        else if ((i+9)<line.length() && line.substr(i,9)=="ALGO_ILOG")
+        {
+            log_type = "ALGO_ILOG";
+            break;
+        }
+        else if ((i+9)<line.length() && line.substr(i, 9)=="ALGO_ELOG")
+        {
+            log_type = "ALGO_ELOG";
+            break;
+        }
+        else if ((i+9)<line.length() && line.substr(i,9)=="ALGO_DLOG")
+        {
+            log_type = "ALGO_DLOG";
+            break;
+        }
+        else if ((i+9)<line.length() && line.substr(i,9)=="ALGO_WLOG")
+        {
+            log_type = "ALGO_WLOG";
+            break;
+        }
+        else if ((i+9)<line.length() && line.substr(i,11)=="SERVER_ILOG")
+        {
+            log_type = "SERVER_ILOG";
+            break;
+        }
+        else if ((i+9)<line.length() && line.substr(i,11)=="SERVER_WLOG")
+        {
+            log_type = "SERVER_WLOG";
+            break;
+        }
+        else if ((i+9)<line.length() && line.substr(i,11)=="SERVER_DLOG")
+        {
+            log_type = "SERVER_DLOG";
+            break;
+        }
+        else if ((i+9)<line.length() && line.substr(i,11)=="SERVER_ELOG")
+        {
+            log_type = "SERVER_ELOG";
+            break;
+        }
+        else
+        {
+            break;
+        }
+
+    }
+    return log_type;
 }
+
