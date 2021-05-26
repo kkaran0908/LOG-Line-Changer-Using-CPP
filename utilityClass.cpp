@@ -7,7 +7,7 @@ utilityClass::utilityClass(int space)
 
 std::string utilityClass::remove_extra_whitespaces(const string &input, string &output)
 {
-	output.clear();  // unless you want to add at the end of existing sring...
+	output.clear();  
 	unique_copy (input.begin(), input.end(), back_insert_iterator<string>(output), [](char a,char b){ return isspace(a) && isspace(b);});  
 	return output ;
 }
@@ -17,7 +17,6 @@ std::string utilityClass::removeStringBetweenDoubleQuotes(const std::string logL
 	int count = 0;
 	std::string stringWithoutQuotes = "";
 
-
 	for (int itr=0;itr<logLine.length();itr++)
     {
     	if (logLine[itr]=='\"')
@@ -26,15 +25,14 @@ std::string utilityClass::removeStringBetweenDoubleQuotes(const std::string logL
 
     		if (count==2)
     			continue;
-
     	}
+
     	if (itr<logLine.length() && count >=2 )
     	{
     		stringWithoutQuotes = stringWithoutQuotes + logLine[itr];
     	}
 
     }
-    	
     return stringWithoutQuotes;
 }
 
@@ -48,22 +46,27 @@ std::string utilityClass::removeExtraSpaces(std::string logLine,int space_count)
 	for (itr = 0 ;itr<logLine.length()-1; itr++)
 	{
 		if(s1==logLine[itr] && s1==logLine[itr+1])
+		{
 			continue;
+		}
 		else
+		{
 			logAfterRemovingExtraSpace = logAfterRemovingExtraSpace + logLine[itr];
+		}
 	}
 	logAfterRemovingExtraSpace = logAfterRemovingExtraSpace + logLine[itr];
 
-	for(itr = 0; itr<space_count-1; itr++)
+	for(itr = 0; itr<space_count; itr++)
+	{
 		logAfterRemovingExtraSpace = " "+ logAfterRemovingExtraSpace;
-
-    
+	}
     return logAfterRemovingExtraSpace;
 }
 
 std::string utilityClass::removeSpaces(string logLine) 
 {
     logLine.erase(remove(logLine.begin(), logLine.end(), ' '), logLine.end());
+    
     return logLine;
 }
 
@@ -75,30 +78,36 @@ std::vector<string> utilityClass::sliceStringAroundComma(std::string line)
     std::stringstream s_stream(line);
 
  
-    while (s_stream.good()) {
+    while (s_stream.good()) 
+    {
         std::string substr;
         getline(s_stream, substr, ',');
         resultVector.push_back(substr);
     }
+
     s_stream.str("");
+
     return resultVector;
 }
 
 std::vector<std::string> utilityClass::findPrintableVariableinWithoutQuotesLog(std::string log_line,std::string logType)
 {
+    
     std::string temp = log_line; //store the log line in temperary variable
-    std::string output = "";
+	std::string output = "";
 
-    temp = removeSpaces(temp);
+	temp = removeSpaces(temp);
 
-    temp = temp.substr(logType.length()+1, log_line.length()-logType.length()-3);
-    
-    vector<string> printableVariable = sliceStringAroundComma(temp); //find out all the values that has been used in the log
+	std::string temp1 = "";
 
-    std::vector<string> variable  =  printableVariable;
-    
+	for (int itr = logType.length()+1; itr <= temp.length()-3;itr++)
+	{
+		temp1 = temp1 + temp[itr];
+	}
+	
+	std::vector<string> printableVariable = sliceStringAroundComma(temp1); //find out all the values that has been used in the log
 
-    return printableVariable;
+	return printableVariable;	
 }
 
 //extract all the variables from the log line
@@ -118,7 +127,6 @@ std::vector<std::string> utilityClass::findPrintableVariable(std::string log_lin
 
 	std::vector<string> variable  =  printableVariable;
 	
-
 	return printableVariable;
 } 
 
@@ -127,6 +135,7 @@ std::vector<std::string> utilityClass::findFormatSpecifier(std::string log_line)
 {
 	std::vector<std::string> specifiers = {};
 	int position = 0;
+
 	for(int itr=0;itr<log_line.length()-1;itr++)
 	{
 		if(log_line.substr(itr,2)=="%s")
@@ -156,18 +165,20 @@ std::vector<std::string> utilityClass::findFormatSpecifier(std::string log_line)
 }
 
 //count space before log   
-int utilityClass::countSpaceBeforeLog(const std::string &line)
+int utilityClass::countSpaceBeforeLog(const std::string line)
 {
 	space_count = 0;
+
 	for(int i =0; i <line.length(); i++)
 	{
-		if (isspace(line[i]))
+		if (line[i]==' ')
 		{
 			space_count++;
 		}
 		else
 			break;
 	}
+   
    return space_count;
 }
 
@@ -178,8 +189,8 @@ bool utilityClass::checkDoubleQuotesInLog(std::string line)
         if(line[itr]=='\"')
             return true;
     }
-    return false;
 
+    return false;
 }
 
 std::string utilityClass::convertOldLogToNewLogWithoutDoubleQuotes(std::string line,std::vector<std::string> variableInLog, int spaceCount, std::string logType)
@@ -221,13 +232,6 @@ std::string utilityClass::convertOldLogToNewLogWithoutDoubleQuotes(std::string l
 std::string utilityClass::convertOldLogToNewLog(std::string log_line, std::vector<string> specifier, std::vector<string> variable, int space_count, std::string logType)
 {
 	std::string newLog = ""; 
-
-	cout<<"Length of the log:"<<log_line.length()<<endl;
-
-	for (int i =0;i<space_count;i++)
-	{
-		newLog = newLog + " ";
-	}
  
     // take the decision based on log type
 	if (logType=="ALGO_ELOG")
@@ -268,7 +272,7 @@ std::string utilityClass::convertOldLogToNewLog(std::string log_line, std::vecto
 			break;
 		}
 		
-		if (log_line[i]=='%')
+		if (log_line[i]=='%' && position<variable.size())
 		{
 			if (specifier[position]=="hex") //to handle the hex code
 
@@ -303,10 +307,8 @@ std::string utilityClass::convertOldLogToNewLog(std::string log_line, std::vecto
 			}
 			newLog = newLog + log_line[i];
 		}
-		cout<<"I am here"<<endl;
+		
 	}
-
-	cout<<"After processing"<<endl;
 
     if (breakpoint==2)
     {    
@@ -343,6 +345,7 @@ std::string utilityClass::removeMultipleDoubleQuotesFromLogsWithQuestionMark(std
 	int positionOfLastQuotes = -1;
 	int itr = 0;
 	int flag = 0;
+
 	while(itr<=questionMarkPosition)
 	{
 		if(line[itr]=='\"')
@@ -362,7 +365,10 @@ std::string utilityClass::removeMultipleDoubleQuotesFromLogsWithQuestionMark(std
 			continue;
 		}
 		else if (line[itr]=='\"')
+		{
 			continue;
+		}
+
 		logWithoutMultipleDoubleQuotes = logWithoutMultipleDoubleQuotes + line[itr];
 	}
 
@@ -372,6 +378,7 @@ std::string utilityClass::removeMultipleDoubleQuotesFromLogsWithQuestionMark(std
 	{
 		logWithoutMultipleDoubleQuotes = logWithoutMultipleDoubleQuotes + line[itr];
 	}
+	
 	return logWithoutMultipleDoubleQuotes;//logWithoutMultipleDoubleQuotes;
 }
 
@@ -410,7 +417,9 @@ std::string utilityClass::removeMultipleDoubleQuotesFromLogs(std::string line)
 			continue;
 		}
 		else if (line[itr]=='\"')
+		{
 			continue;
+		}
 		logWithoutMultipleDoubleQuotes = logWithoutMultipleDoubleQuotes + line[itr];
 	}
 
@@ -424,29 +433,29 @@ std::vector<string> utilityClass::removeTo_StringFromPrintableVariable(std::vect
 	std::vector<string> storeModifiedVariable;
 
     for (int i=0; i<variableInLog.size(); i++)
-        {
-      		if (variableInLog[i].find("to_string()") != std::string::npos)
-      	        { 
-      	    		std::string tmp1 = variableInLog[i].substr(0, variableInLog[i].size()-12);
-      				storeModifiedVariable.push_back(tmp1);
-      			}
-      		else
-      		{
-      			storeModifiedVariable.push_back(variableInLog[i]);
-      		}
-        }
-      return storeModifiedVariable;
+    {
+      	if (variableInLog[i].find("to_string()") != std::string::npos)
+      	{ 
+      	    std::string tmp1 = variableInLog[i].substr(0, variableInLog[i].size()-12);
+      		storeModifiedVariable.push_back(tmp1);
+      	}
+      	else
+    	{
+    		storeModifiedVariable.push_back(variableInLog[i]);
+      	}
+    }
+
+    return storeModifiedVariable;
 }
 
 
 std::vector<string> utilityClass::removeStdStringFromPrintableVariable(std::vector<string> variableInLog)
 {
-	  std::vector<string> storeModifiedVariable;
+	std::vector<string> storeModifiedVariable;
 
-      for (int i=0; i<variableInLog.size(); i++)
-      {
+    for (int i=0; i<variableInLog.size(); i++)
+    {
       	if (variableInLog[i].length()>=12 && variableInLog[i].substr(0,11)=="std::string")
-
       	{ 
 
       	    std::string tmp1 = variableInLog[i].substr(0, variableInLog[i].size()-1);
@@ -458,6 +467,7 @@ std::vector<string> utilityClass::removeStdStringFromPrintableVariable(std::vect
       		storeModifiedVariable.push_back(variableInLog[i]);
       	}
       }
+
       return storeModifiedVariable;
 }
 

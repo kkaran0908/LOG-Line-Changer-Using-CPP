@@ -16,7 +16,7 @@ public:
     int space_count;
     utilityClass(int space);
     std::string checkLog(std::string line); //check if a line is log line or not and return the log type
-    int countSpaceBeforeLog(const std::string &line);
+    int countSpaceBeforeLog(std::string);
     std::string fetchTheEntireLogLine(std::string line);
     std::string convertOldLogToNewLog(std::string, std::vector<string>, std::vector<string>, int , std::string);
     std::vector<std::string> findFormatSpecifier(std::string);
