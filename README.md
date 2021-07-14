@@ -1,11 +1,10 @@
-# LOG-Line-Changer-Using-CPP
+#### To Compile the Code:
 
-### To Compile the Code:
+g++ -std=c++11 utilityClass.cpp main.cpp 
 
-g++ -std=c++11 utilityClass.cpp main.cpp   
-
-### TO Run the Code:
+#### TO Run the Code:
 
 ./a.out
 
-Note: Original.cpp file is containing the old logs and temp.cpp will contain the original.cpp's content with new Log design.
+Note: 1. fileWithOldLogs.cpp-> it contains the old format logs collected from accross the algo code.
+      2. fileWithStreamBasedLogs.cpp.  It contains the new format logs collected from accross the algo code.
