@@ -6,7 +6,7 @@ int main()
     ofstream fileToStoreStreamBasedLogs("fileWithStreamBasedLogs.cpp"); //file to store stream based logs accross all the files
     ofstream fileToStoreOldLogs("fileWithOlgLogs.cpp"); //file to store old format logs accross all the files
 
-    std::string path = "/Users/karankumar/Desktop/cppFiles/algo"; //path from where we recursively read the files for processing
+    std::string path = "/Users/karankumar/Desktop/algo"; //path from where we recursively read the files for processing
 
     for (auto& dirEntry: std::filesystem::recursive_directory_iterator(path)) 
         {
@@ -35,6 +35,7 @@ int main()
 
 		    const char *plast;
 		    plast = strrchr(std::string(file).c_str(), '/');
+
 		    int endIndex = plast - std::string(file).c_str();
 
 		    std::string subPath = std::string(file).substr(0,endIndex+1);
@@ -51,6 +52,9 @@ int main()
                 int spaceCount  = 0;
 
 			    string logType = uti.checkLog(line);  //check if some particular line is log line or not and find the type of log
+
+                //cout<<"Log Type: "<<logType<<endl;
+                //continue;
 
     			if (!logType.empty())   //if some particular line is log line and log is distributed in more than one line, combined it and stroed it in a variable called combinedLogLine
 	       		{
@@ -75,8 +79,15 @@ int main()
                     spaceCount = uti.countSpaceBeforeLog(line);   //count the space before the log line so that after modification we can make consistency
 
                     std::string temperoryLine = uti.removeExtraSpaces(line, spaceCount); //remove space to store the log line in universal file i.e. fileWithOlgLogs.cpp
+
                     fileToStoreOldLogs<<std::string(filename)+temperoryLine<<"\n";       
 			    }
+
+                if(logType=="m_execIf->LogToAlgoJob") //convert such logs to normal log format
+                {
+                    line = uti.processTheLogLineWithLog_m_execIfLogToAlgoJob(line);
+                    logType = uti.checkLog(line);  //logType contains what kind of log line it is i.e. warning, error etc.
+                }
 
             
 
@@ -114,9 +125,12 @@ int main()
                     
                         variableInLog = uti.findPrintableVariable(line,logType); // find all the variables from the log
 
+                        
+
                         variableInLog = uti.removeStdStringFromPrintableVariable(variableInLog);  //remove std::string from std::string(variable);
 
                         variableInLog = uti.removeTo_StringFromPrintableVariable(variableInLog);  //remove .to_string from variable.to_string();
+
 
                         line = uti.convertOldLogToNewLog(line, specifier ,variableInLog, spaceCount, logType);//  convert the old log line into the new log format
 
@@ -128,7 +142,9 @@ int main()
 
                 fileToStoreStreamBasedLogs<< std::string(filename) + line + "\n"; //save the modified logs to the universal file that will contain stream based logs of all the files
 			}  	
-			flag = 0;		
+			flag = 0;
+
+            line = uti.distributeLongerLogToMultipleLines(line,spaceCount);		
 			MyFile<<line + "\n"; //write to the log line to the temperory file
         }
 		

@@ -224,7 +224,7 @@ std::string utilityClass::convertOldLogToNewLogWithoutDoubleQuotes(std::string l
     {
         newLog = newLog + variableInLog[itr] + "<<" + "\", " + "\"" + "<<";
     }
-    newLog = newLog.substr(0,newLog.length()-6) + "endl;";
+    newLog = newLog.substr(0,newLog.length()-6) + "std::endl;";
 
     return newLog;
 }
@@ -314,7 +314,7 @@ std::string utilityClass::convertOldLogToNewLog(std::string log_line, std::vecto
     {    
     	newLog = newLog + "\"<<\"";
     }
-	newLog = newLog.substr(0,newLog.length()-3) + "<<endl;";
+	newLog = newLog.substr(0,newLog.length()-3) + ";";
 	
 	return newLog;
 
@@ -528,6 +528,11 @@ std::string utilityClass::checkLog(std::string line)
             log_type = "SERVER_ELOG";
             break;
         }
+        else if ((i+22)<line.length() && line.substr(i,22)=="m_execIf->LogToAlgoJob")
+        {
+            log_type = "m_execIf->LogToAlgoJob";
+            break;
+        }
         else
         {
             break;
@@ -535,5 +540,96 @@ std::string utilityClass::checkLog(std::string line)
 
     }
     return log_type;
+}
+//this function will convert "m_execIf->LogToAlgoJob( LogLevel::debug, __FILE_NAME__, __LINE__, "GeneratorBlock[%s]::Ignore take act" type of log to SERVER_DLOG(...) 
+//so that processig can become easy
+std::string utilityClass::processTheLogLineWithLog_m_execIfLogToAlgoJob(std::string line)
+{
+	std::string logType = ""; //find what kind of log line it is error, info, etc 
+
+	for(int l=0;l<line.length();l++)
+	{
+		if(line.substr(l,10)=="LogLevel::")
+		{
+			l = l+10;
+			while(line[l]!=',')
+			{
+				logType = logType + line[l];
+				l = l+1;
+			}
+			break;
+			
+		}
+		
+	}
+
+	std::string tempLog = "";
+
+	int space_count = countSpaceBeforeLog(line);
+
+	for(int i =0;i<space_count;i++)
+	{
+		tempLog = tempLog + " ";
+	}
+
+	if(logType=="error")
+	{
+		tempLog  = tempLog + "SERVER_ELOG(";
+	}
+	else if(logType=="info")
+	{
+		tempLog = tempLog + "SERVER_ILOG(";
+	}
+	else if(logType=="debug")
+	{
+		tempLog = tempLog + "SERVER_DLOG(";
+	}
+	else if(logType=="warning")
+	{
+		tempLog = tempLog + "SERVER_WLOG(";
+	}
+
+	int found = line.find('\"');
+    if (found != string::npos)
+    {
+    	for(int i = found;i<line.length();i++)
+    	{
+    		tempLog = tempLog + line[i];
+    	}
+    }
+
+	return tempLog;
+}
+
+std::string utilityClass::distributeLongerLogToMultipleLines(std::string line,int space)
+{
+
+		std::string tempLog = "";
+
+		int count = 0; //to break the line after certain character
+		int i = 0;
+		while(i<line.length())
+		{
+
+			if(count>70 && line.substr(i,2)=="<<")
+			{
+				//cout<<"here";
+				tempLog = tempLog + "<<\n";
+				for(int s=0;s<space+12;s++)
+				{
+					tempLog = tempLog + " ";
+				}
+				i = i+2;
+				count = 0;
+				continue;
+			}
+
+			tempLog = tempLog + line[i];
+			i = i+1;
+			count = count+1;
+
+		}
+		//cout<<tempLog<<endl;
+		return tempLog;
 }
 

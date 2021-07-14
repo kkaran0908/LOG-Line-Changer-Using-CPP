@@ -34,4 +34,6 @@ public:
     bool checkDoubleQuotesInLog(std::string);
     std::vector<string> findPrintableVariableinWithoutQuotesLog(std::string,std::string);
     std::string convertOldLogToNewLogWithoutDoubleQuotes(std::string, std::vector<std::string>, int, std::string);
+    std::string processTheLogLineWithLog_m_execIfLogToAlgoJob(std::string);
+    std::string distributeLongerLogToMultipleLines(std::string,int);
 };
